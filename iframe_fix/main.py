@@ -15,12 +15,14 @@ def get_html_content(course, page):
   full_page = course.get_page(page.page_id)
   return full_page.body
 
-def get_iframes_elems(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    return soup.find_all('iframe')
-
 def is_drive_link(src):
     return "drive.google.com" in src
+
+def create_link_replacement(soup, src):
+    link_text = "Click here to access this resource"
+    link_elem = soup.new_tag('a', href=src)
+    link_elem.string = link_text
+    return link_elem
 
 def fix_iframes_for_course(course_id):
     course = canvas.get_course(course_id)
@@ -28,23 +30,26 @@ def fix_iframes_for_course(course_id):
     # ex. assignment pages
     all_pages = course.get_pages()
     fixed_pages = []
-    counter = 0
+    # counter = 0
     for page in all_pages:
         html_content = get_html_content(course, page)
-        iframe_elems = get_iframes_elems(html_content)
+        soup = BeautifulSoup(html_content, 'html.parser')
+        iframe_elems = soup.find_all('iframe')
+
         has_drive_iframe = False
         for iframe in iframe_elems:
-            counter += 1
             src = iframe['src']
             if is_drive_link(src):
                 has_drive_iframe = True
+                link_elem = create_link_replacement(soup, src)
+                iframe.replace_with(link_elem)
         
         if has_drive_iframe:
-            # TODO replace iframe 
+            # counter += 1
+            # if counter > 10:
+            #     break
+            # TODO push html change to the Canvas page
             fixed_pages.append(page.page_id)
-        
-        if counter > 10:
-            break
     return fixed_pages
 
 
