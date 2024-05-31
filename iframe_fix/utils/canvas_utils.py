@@ -1,3 +1,4 @@
+import os
 from canvasapi import Canvas
 from dotenv import load_dotenv
 from utils.csv_utils import add_edited_pages_to_tracking_csv
